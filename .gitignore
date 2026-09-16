@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE files
+.vscode/
+.idea/
+
+
+
+# Generated outputs
+features.csv
+feature_comparison.csv
+training_data.csv
+gateway_ranking.csv
+gateway_scores.csv
+
+# Development / verification files
+
+tests/final_verification.py
+
+# Project demonstration video
+Video Project.mp4
