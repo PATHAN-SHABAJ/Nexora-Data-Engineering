@@ -11,6 +11,37 @@ The challenge dataset is **not included in this repository** because the challen
 
 ---
 
+## How to Run
+
+Install the required Python packages:
+
+pip install -r requirements.txt
+
+Keep the challenge data/ folder in the project root.
+
+Run the complete pipeline:
+
+python src/pipeline.py
+
+The pipeline runs the data cleaning, feature engineering, target creation,
+feature analysis, and weekly scoring steps.
+
+The final prediction file is generated as:
+
+predictions.csv
+
+To validate the output:
+
+python validate_submission.py predictions.csv
+
+Expected validation result:
+
+predictions.csv: OK
+15 ranked gateways for each of 8 weeks
+2026-02-02 to 2026-03-23
+
+---
+
 ## Pipeline
 
 The implementation is divided into separate stages:
@@ -41,32 +72,3 @@ Validation
 
 
 
-## How to Run
-
-Install the required Python packages:
-
-```bash
-pip install -r requirements.txt
-
-Keep the challenge data/ folder in the project root.
-
-Run the complete pipeline:
-
-python src/pipeline.py
-
-The pipeline runs the data cleaning, feature engineering, target creation,
-feature analysis, and weekly scoring steps.
-
-The final prediction file is generated as:
-
-predictions.csv
-
-To validate the output:
-
-python validate_submission.py predictions.csv
-
-Expected validation result:
-
-predictions.csv: OK
-15 ranked gateways for each of 8 weeks
-2026-02-02 to 2026-03-23
