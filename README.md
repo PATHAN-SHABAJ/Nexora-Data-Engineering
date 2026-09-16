@@ -42,6 +42,13 @@ predictions.csv: OK
 
 ---
 
+## Project Demonstration Video
+
+[Watch the Project Demonstration Video](https://drive.google.com/file/d/1HGNsemcC_j23OQeFQAzKPXnBs6dz_a7C/view?usp=sharing)
+
+
+---
+
 ## Pipeline
 
 The implementation is divided into separate stages:
