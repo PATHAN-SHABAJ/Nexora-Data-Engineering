@@ -1,137 +1,28 @@
 # Implementation Decisions
 
-This document explains the main implementation decisions made for my Data Engineering solution for the LPDG Innovation Hub Selection Challenge 2026.
+I selected **Data Engineering** as my focus area for the LPDG Innovation Hub Selection Challenge 2026.
 
-## 1. Focus Area
+I decided to keep the solution as a small, reproducible pipeline instead of putting all the processing into one script. The main flow is data loading, cleaning, feature engineering, target creation, feature analysis, weekly scoring, and validation.
 
-I selected **Data Engineering** as my focus area.
+For data loading, I kept the logic in `src/data_loader.py`. It handles the gateway master data, meter read data, field visit data, engineer review data, and the monthly telemetry Parquet files. The telemetry files are read from the monthly partition structure and combined when needed.
 
-The implementation focuses on building a reproducible data pipeline for the provided gateway telemetry and related operational data.
+I kept data cleaning separate in `src/clean_data.py`. This makes it easier to prepare the input data before feature engineering and scoring. The cleaned files are generated locally during execution.
 
-The main work covers:
+I also kept the data quality checks separate in `src/data_quality.py`. The purpose is to check the processed data before it is used by the later stages instead of mixing validation logic into every processing script.
 
-- Data loading
-- Data cleaning
-- Data quality checks
-- Feature engineering
-- Gateway-level aggregation
-- Weekly anomaly scoring
-- Prediction generation
-- Validation and testing
+For feature engineering, I used `src/feature_engineering.py` to convert the telemetry information into gateway-level features. The features include reboot-related information, disconnection counts, offline duration, average offline duration, maximum offline duration, and reboot duration. Gateway-level aggregation was used because the final scoring is done at the gateway level.
 
-I did not build a new machine learning model because the challenge provides a working baseline and states that a new model is not required for the Data Engineering track.
+I kept target creation separate in `src/create_target.py`. The target information is created for the analysis workflow. During development, the generated training data contained 120 records, with 60 records having target `0` and 60 records having target `1`. I did not train a new machine learning model because I selected the Data Engineering track and the challenge provides a working baseline.
 
-## 2. Data Loading
+For feature analysis, I used `src/analyze_features.py`. This compares numerical features between the available target groups using their mean values, differences, and percentage differences. This helped me inspect the behaviour of the features produced by the pipeline.
 
-Data loading is separated into `src/data_loader.py`.
+For the final scoring, I used `src/scoring.py`. The scoring compares recent gateway behaviour with a historical baseline. I used a 28-day historical period and a previous 7-day period for recent observations, with a 3-sigma threshold. The scoring uses offline duration, disconnection count, and reboot count. Gateways are then ranked based on the number of anomalous observations, with the top 15 gateways retained for each scoring week.
 
-The loader handles the different input sources used by the pipeline:
+The final output is `predictions.csv`. It contains 8 scoring weeks, 15 ranked gateways per week, and 120 rows in total. The output columns are `week_start`, `rank`, `gateway_id`, `score`, and `reason`. The generated output covers the period from `2026-02-02` to `2026-03-23`.
 
-- Gateway master data
-- Meter read data
-- Field visit data
-- Engineer review data
-- Monthly telemetry Parquet files
+I used `src/pipeline.py` to keep the main processing stages in one execution flow. It runs data cleaning, feature engineering, target creation, feature analysis, and scoring in sequence.
 
-Telemetry is stored in monthly partitions and loaded and combined when required by the pipeline.
-
-Keeping the loading logic separate makes the processing stages easier to maintain.
-
-## 3. Data Cleaning
-
-Data cleaning is implemented in `src/clean_data.py`.
-
-The cleaning stage prepares the input data before feature engineering and scoring.
-
-Cleaned files are generated locally under `data/cleaned/`.
-
-The challenge data itself is not included in this repository.
-
-## 4. Data Quality
-
-Data quality checks are implemented in `src/data_quality.py`.
-
-The checks are used to identify issues in the processed data before it is used by later pipeline stages.
-
-This keeps data validation separate from the feature engineering and scoring logic.
-
-## 5. Feature Engineering
-
-Gateway-level features are created in `src/feature_engineering.py`.
-
-The telemetry data is aggregated to the gateway level so that the scoring process can work with meaningful gateway-level measurements.
-
-The generated features include measures related to:
-
-- Reboots
-- Disconnections
-- Offline duration
-- Average offline duration
-- Maximum offline duration
-- Reboot duration
-
-## 6. Weekly Scoring
-
-The weekly scoring logic is implemented in `src/scoring.py`.
-
-The scoring process uses a historical baseline and a recent observation period to identify abnormal gateway behaviour.
-
-The implementation uses:
-
-- 28-day historical baseline
-- Previous 7 days as the recent period
-- 3-sigma anomaly threshold
-- Offline duration
-- Disconnection count
-- Reboot count
-
-Gateways are ranked based on the number of anomalous observations detected during the recent period.
-
-The top 15 gateways are retained for each scoring week.
-
-## 7. Prediction Output
-
-The scoring process generates `predictions.csv`.
-
-The validated output contains:
-
-- 8 scoring weeks
-- 15 ranked gateways per week
-- 120 total rows
-
-The columns are:
-
-- `week_start`
-- `rank`
-- `gateway_id`
-- `score`
-- `reason`
-
-The prediction file was checked using the provided validation script.
-
-## 8. Pipeline Organization
-
-The main pipeline is implemented in `src/pipeline.py`.
-
-The processing stages are executed in sequence:
-
-1. Data cleaning
-2. Feature engineering
-3. Target creation
-4. Feature analysis
-5. Weekly scoring
-
-Keeping these stages separate makes the individual parts easier to inspect and modify.
-
-## 9. Validation and Testing
-
-The provided validation script was used to check the final prediction output.
-
-The project test suite was also used during development.
-
-The final prediction file passed validation:
+Before submission, I checked the prediction file using the provided validation script:
 
 ```text
-predictions.csv: OK
-15 ranked gateways for each of 8 weeks
-2026-02-02 to 2026-03-23
+python validate_submission.py predictions.csv
